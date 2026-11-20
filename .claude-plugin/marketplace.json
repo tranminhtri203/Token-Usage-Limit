@@ -1,0 +1,5 @@
+{
+  "name": "han-muc",
+  "owner": { "name": "tranminhtri203" },
+  "plugins": [{ "name": "han-muc", "source": "./" }]
+}
