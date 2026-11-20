@@ -8,6 +8,9 @@ Cảnh báo một lần khi một khung vượt 90%. Số liệu chỉ có với
 
 Lệnh: `/han-muc` chuyển vòng đầy đủ → gọn → ẩn; hoặc `/han-muc day`, `/han-muc gon`, `/han-muc an`.
 
+Bảng hạn mức in cuối mỗi câu trả lời (bật/tắt: `/han-muc cuoi`), và ghi ra file `D:\2025\OneDrive\2.Cá nhân\Github\Han-muc\han-muc.json`
+(đổi trong cấu hình plugin, mục `outFile`) để skill ở Cowork đọc.
+
 ## Cài đặt
 
 Tại ô nhập của Claude Code trên terminal:

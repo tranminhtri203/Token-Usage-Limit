@@ -1,1 +1,14 @@
-{ "name": "han-muc", "version": "0.5.0", "description": "Thanh hạn mức sử dụng (5 giờ / 7 ngày) phía trên ô nhập", "types": "./types/index.d.ts" }
+{
+  "name": "han-muc",
+  "version": "0.7.1",
+  "description": "Thanh hạn mức sử dụng (5 giờ / 7 ngày): thanh, khung, bảng cuối câu trả lời và file số liệu cho skill",
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "outFile": {
+      "type": "string",
+      "title": "File số liệu hạn mức",
+      "description": "Đường dẫn file JSON mod ghi số liệu sau mỗi câu trả lời (để skill ở Cowork đọc). Để trống: không ghi.",
+      "default": "D:\\2025\\OneDrive\\2.Cá nhân\\Github\\Han-muc\\han-muc.json"
+    }
+  }
+}
