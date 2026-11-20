@@ -1,10 +1,12 @@
 import { atom, read, update } from 'claude-code'
-import type { Register } from 'claude-code'
+import type { EngineInterface, Register, RenderInput } from 'claude-code'
 
 import type { Limit, Mode } from '../types'
 
 const limits = atom({ plugin: 'han-muc', key: 'limits' } as const, [] as Limit[])
 const mode = atom({ plugin: 'han-muc', key: 'mode' } as const, 'full' as Mode)
+
+const PANE = 'han-muc'
 
 type Info = { name: string; short: string; spanMs?: number }
 const INFO: Record<string, Info> = {
@@ -39,18 +41,39 @@ const elapsed = (l: Limit, now: number) => {
   return f >= 0 && f <= 1 ? f : undefined
 }
 
+/** Thanh dạng chữ (dùng cho kết quả lệnh và dòng trạng thái, hiện được ở mọi giao diện) */
+const textBar = (p: number, w = 10) => {
+  const n = Math.round((Math.max(0, Math.min(100, p)) / 100) * w)
+  return '▰'.repeat(n) + '▱'.repeat(w - n)
+}
+const dot = (p: number) => (p >= 90 ? '🔴' : p >= 70 ? '🟡' : '🟢')
+const summary = (list: Limit[], now: number) =>
+  list.length === 0
+    ? 'Chưa có số liệu hạn mức (cần gói thuê bao; có sau lượt trả lời đầu tiên).'
+    : list
+        .map(l => {
+          const r = left(l.resetsAt, now)
+          return `${dot(l.percentUsed)} ${info(l.kind).name.padEnd(11)} ${textBar(l.percentUsed)} ${String(l.percentUsed).padStart(3)}%${r ? ` · còn ${r}` : ''}`
+        })
+        .join('\n')
+const statusText = (list: Limit[]) =>
+  list.length === 0 ? undefined : list.map(l => `${info(l.kind).short} ${textBar(l.percentUsed, 5)} ${l.percentUsed}%`).join('  ')
+
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     const r = await next(e)
     const u = await $.session.usage()
     await update($, limits, () => u.rateLimits)
-    $.command.register({ name: 'han-muc', description: 'Thanh hạn mức: đầy đủ → gọn → ẩn (hoặc /han-muc day|gon|an)' })
+    $.ui.status(statusText(u.rateLimits))
+    void $.ui.open({ id: PANE, title: 'Hạn mức sử dụng', placement: 'widget' })
+    $.command.register({ name: 'han-muc', description: 'Xem hạn mức sử dụng; đổi thanh: đầy đủ → gọn → ẩn (hoặc /han-muc day|gon|an)' })
     return r
   })
 
   on('session.measure', async ($, e, next) => {
     const before = await read($, limits)
     await update($, limits, () => e.rateLimits)
+    $.ui.status(statusText(e.rateLimits))
     for (const l of e.rateLimits) {
       const old = before.find(b => b.kind === l.kind)?.percentUsed ?? 0
       if (l.percentUsed >= 90 && old < 90) $.ui.toast(`⚠ ${info(l.kind).name}: đã dùng ${l.percentUsed}%`)
@@ -62,12 +85,25 @@ export const register: Register = on => {
     const a = e.args.trim().toLowerCase()
     const pick: Mode | undefined = a.startsWith('d') ? 'full' : a.startsWith('g') ? 'compact' : a.startsWith('a') ? 'hidden' : undefined
     const m = await update($, mode, v => pick ?? (v === 'full' ? 'compact' : v === 'compact' ? 'hidden' : 'full'))
-    return { text: `Thanh hạn mức: ${m === 'full' ? 'đầy đủ' : m === 'compact' ? 'gọn' : 'ẩn'}.` }
+    const fresh = (await $.session.usage()).rateLimits
+    await update($, limits, () => fresh)
+    $.ui.status(statusText(fresh))
+    const opened = await $.ui.open({ id: PANE, title: 'Hạn mức sử dụng', placement: 'widget' })
+    const label = m === 'full' ? 'đầy đủ' : m === 'compact' ? 'gọn' : 'ẩn'
+    return { text: `${summary(fresh, await $.clock.now())}\n(Thanh trên ô nhập: ${label} · /han-muc day|gon|an)${opened.isPlaced ? '' : `\n(Khung bên cạnh chưa hiện: ${opened.reason})`}` }
   })
+
+  on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => draw($, e, 'pane'))
 
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
     const m = await read($, mode)
     if (e.props.hasSurvey || m === 'hidden') return next(e)
+    return draw($, e, m)
+  })
+}
+
+async function draw($: EngineInterface, e: RenderInput<'Pane' | 'AbovePrompt'>, m: Mode | 'pane') {
+  {
 
     const list = await read($, limits)
     const now = await $.clock.now()
@@ -146,5 +182,5 @@ export const register: Register = on => {
         })}
       </Box>
     )
-  })
+  }
 }

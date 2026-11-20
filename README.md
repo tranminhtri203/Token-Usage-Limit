@@ -3,6 +3,7 @@
 Mod cho Claude Code: thanh hạn mức sử dụng (phiên 5 giờ, tuần 7 ngày) hiển thị phía trên ô nhập.
 Thanh tô màu xanh → vàng → đỏ theo mức đã dùng, có vạch ┃ đánh dấu thời gian đã trôi của khung,
 ghi thời gian còn lại đến lúc làm mới và nhịp dùng (trong nhịp / đúng nhịp / nhanh hơn nhịp).
+Có khung "Hạn mức sử dụng" cạnh khung chat (tự mở), dòng trạng thái, và lệnh `/han-muc` in bảng hạn mức dạng chữ.
 Cảnh báo một lần khi một khung vượt 90%. Số liệu chỉ có với gói thuê bao Claude (Pro/Max).
 
 Lệnh: `/han-muc` chuyển vòng đầy đủ → gọn → ẩn; hoặc `/han-muc day`, `/han-muc gon`, `/han-muc an`.
