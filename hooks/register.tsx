@@ -89,6 +89,7 @@ export const register: Register = (on, options) => {
     const r = await next(e)
     const u = await $.session.usage()
     await update($, limits, () => u.rateLimits)
+    $.ui.status(undefined) // xoá dòng trạng thái mà bản 0.7.4 trở về trước đã ghi
     void $.ui.open({ id: PANE, title: 'Hạn mức sử dụng', placement: 'widget' })
     $.command.register({ name: 'han-muc', description: 'Xem hạn mức sử dụng; đổi thanh: đầy đủ → gọn → ẩn (hoặc /han-muc day|gon|an)' })
     return r
