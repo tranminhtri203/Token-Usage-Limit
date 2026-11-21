@@ -18,11 +18,8 @@ const INFO: Record<string, Info> = {
 const info = (k: string): Info => INFO[k] ?? { name: k, short: k }
 
 // Màu cố định (hex) để luôn hiện màu, không phụ thuộc giao diện
-const C = { green: '#22c55e', lime: '#a3e635', amber: '#f59e0b', orange: '#f97316', red: '#ef4444', rest: '#4b5563', mark: '#e5e7eb', title: '#d97757', label: '#93c5fd' }
+const C = { green: '#22c55e', amber: '#f59e0b', red: '#ef4444', title: '#d97757', label: '#93c5fd' }
 const tone = (p: number) => (p >= 90 ? C.red : p >= 70 ? C.amber : C.green)
-/** Màu từng ô theo vị trí trên thanh: dải xanh → vàng → đỏ */
-const heat = (pos: number) => (pos < 40 ? C.green : pos < 60 ? C.lime : pos < 75 ? C.amber : pos < 90 ? C.orange : C.red)
-const icon = (p: number) => (p >= 90 ? '●' : p >= 70 ? '◐' : '○')
 
 const left = (iso: string | undefined, now: number) => {
   if (!iso) return ''
@@ -143,32 +140,6 @@ async function draw($: EngineInterface, e: RenderInput<'Pane' | 'AbovePrompt'>, 
     const now = await $.clock.now()
     const { Box, Text } = $.ui.resolve(e)
 
-    const bar = (l: Limit, width: number) => {
-      const p = Math.max(0, Math.min(100, l.percentUsed))
-      const filled = Math.round((p / 100) * width)
-      const f = elapsed(l, now)
-      const mark = f === undefined ? -1 : Math.min(width - 1, Math.round(f * width))
-      const cells = Array.from({ length: width }, (_, i) => i)
-      // gom các ô liền nhau cùng kiểu thành một đoạn Text
-      const kind = (i: number) => (i === mark ? 'mark' : i < filled ? heat(((i + 0.5) / width) * 100) : 'rest')
-      const runs: { k: string; n: number }[] = []
-      for (const i of cells) {
-        const k = kind(i)
-        const last = runs[runs.length - 1]
-        if (last && last.k === k) last.n += 1
-        else runs.push({ k, n: 1 })
-      }
-      return (
-        <Text>
-          {runs.map((r, i) =>
-            r.k === 'mark' ? <Text key={String(i)} color={C.mark} weight="bold">{'┃'}</Text>
-            : r.k === 'rest' ? <Text key={String(i)} color={C.rest}>{'─'.repeat(r.n)}</Text>
-            : <Text key={String(i)} color={r.k}>{'━'.repeat(r.n)}</Text>,
-          )}
-        </Text>
-      )
-    }
-
     if (list.length === 0) {
       return (
         <Box paddingX={1}>
@@ -183,7 +154,7 @@ async function draw($: EngineInterface, e: RenderInput<'Pane' | 'AbovePrompt'>, 
           {list.map(l => (
             <Box key={l.kind} flexDirection="row" gap={1}>
               <Text color={C.label}>{info(l.kind).short}</Text>
-              {bar(l, 10)}
+              <Text>{colorBar(l.percentUsed, 5)}</Text>
               <Text color={tone(l.percentUsed)} weight="bold">{l.percentUsed}%</Text>
             </Box>
           ))}
@@ -193,10 +164,7 @@ async function draw($: EngineInterface, e: RenderInput<'Pane' | 'AbovePrompt'>, 
 
     return (
       <Box flexDirection="column" borderStyle="round" borderColor={C.title} paddingX={1}>
-        <Box flexDirection="row" justifyContent="space-between">
-          <Text color={C.title} weight="bold">✻ Hạn mức sử dụng</Text>
-          <Text color="subtle">┃ = thời gian đã trôi</Text>
-        </Box>
+        <Text color={C.title} weight="bold">✻ Hạn mức sử dụng</Text>
         {list.map(l => {
           const p = l.percentUsed
           const f = elapsed(l, now)
@@ -204,9 +172,9 @@ async function draw($: EngineInterface, e: RenderInput<'Pane' | 'AbovePrompt'>, 
           const reset = left(l.resetsAt, now)
           return (
             <Box key={l.kind} flexDirection="row" gap={1}>
-              <Text color={tone(p)}>{icon(p)}</Text>
+              <Text>{dot(p)}</Text>
               <Text color={C.label}>{info(l.kind).name.padEnd(11)}</Text>
-              {bar(l, 24)}
+              <Text>{colorBar(p)}</Text>
               <Text color={tone(p)} weight="bold">{`${p}%`.padStart(4)}</Text>
               <Text color="subtle">
                 {[reset && `còn ${reset}`, pace].filter(Boolean).join(' · ')}
