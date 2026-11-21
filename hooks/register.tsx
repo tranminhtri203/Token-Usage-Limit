@@ -157,8 +157,8 @@ async function draw($: EngineInterface, e: RenderInput<'Pane' | 'AbovePrompt'>, 
     // Cột tên và cột % có độ rộng cố định để các dòng thẳng hàng
     const rows = list.map(l => (
       <Box key={l.kind} flexDirection="row" gap={2}>
-        <Text>{dot(l.percentUsed)}</Text>
         <Box width={11}><Text wrap="truncate-end">{info(l.kind).name}</Text></Box>
+        <Text>{dot(l.percentUsed)}</Text>
         {bar(l.percentUsed)}
         <Box width={4} justifyContent="flex-end"><Text color={tone(l.percentUsed)} weight="bold">{`${l.percentUsed}%`}</Text></Box>
         {l.resetsAt && <Text wrap="truncate-end">{resetText(l.resetsAt, now)}</Text>}

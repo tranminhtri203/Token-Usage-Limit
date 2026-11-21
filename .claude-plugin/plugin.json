@@ -1,6 +1,6 @@
 {
   "name": "han-muc",
-  "version": "0.7.11",
+  "version": "0.7.12",
   "description": "Thanh hạn mức sử dụng (5 giờ / 7 ngày): thanh, khung, bảng cuối câu trả lời và file số liệu cho skill",
   "types": "./types/index.d.ts",
   "userConfig": {
