@@ -18,8 +18,15 @@ const INFO: Record<string, Info> = {
 const info = (k: string): Info => INFO[k] ?? { name: k, short: k }
 
 // Màu cố định (hex) để luôn hiện màu, không phụ thuộc giao diện
-const C = { green: '#22c55e', amber: '#f59e0b', red: '#ef4444', title: '#d97757', label: '#93c5fd' }
+const C = { green: '#22c55e', lime: '#a3e635', amber: '#f59e0b', orange: '#f97316', red: '#ef4444', rest: '#4b5563', title: '#d97757', label: '#93c5fd' }
 const tone = (p: number) => (p >= 90 ? C.red : p >= 70 ? C.amber : C.green)
+/** Màu ô theo vị trí trên thanh: xanh → vàng → đỏ */
+const heat = (pos: number) => (pos < 40 ? C.green : pos < 60 ? C.lime : pos < 75 ? C.amber : pos < 90 ? C.orange : C.red)
+/** Màu 10 ô của thanh trên ô nhập: ô đã dùng tô theo vị trí, ô còn lại xám. Dùng >0% là có ít nhất 1 ô. */
+const cellColors = (p: number) => {
+  const used = Math.ceil(Math.max(0, Math.min(100, p)) / 10)
+  return Array.from({ length: 10 }, (_, i) => (i < used ? heat(i * 10 + 5) : C.rest))
+}
 
 const left = (iso: string | undefined, now: number) => {
   if (!iso) return ''
@@ -140,6 +147,12 @@ async function draw($: EngineInterface, e: RenderInput<'Pane' | 'AbovePrompt'>, 
     const now = await $.clock.now()
     const { Box, Text } = $.ui.resolve(e)
 
+    const bar = (p: number) => (
+      <Text>
+        {cellColors(p).map((c, i) => <Text key={String(i)} color={c}>{i < 9 ? '█ ' : '█'}</Text>)}
+      </Text>
+    )
+
     if (list.length === 0) {
       return (
         <Box paddingX={1}>
@@ -154,7 +167,7 @@ async function draw($: EngineInterface, e: RenderInput<'Pane' | 'AbovePrompt'>, 
           {list.map(l => (
             <Box key={l.kind} flexDirection="row" gap={1}>
               <Text color={C.label}>{info(l.kind).short}</Text>
-              <Text>{colorBar(l.percentUsed, 5)}</Text>
+              {bar(l.percentUsed)}
               <Text color={tone(l.percentUsed)} weight="bold">{l.percentUsed}%</Text>
             </Box>
           ))}
@@ -174,7 +187,7 @@ async function draw($: EngineInterface, e: RenderInput<'Pane' | 'AbovePrompt'>, 
             <Box key={l.kind} flexDirection="row" gap={1}>
               <Text>{dot(p)}</Text>
               <Text color={C.label}>{info(l.kind).name.padEnd(11)}</Text>
-              <Text>{colorBar(p)}</Text>
+              {bar(p)}
               <Text color={tone(p)} weight="bold">{`${p}%`.padStart(4)}</Text>
               <Text color="subtle">
                 {[reset && `còn ${reset}`, pace].filter(Boolean).join(' · ')}
