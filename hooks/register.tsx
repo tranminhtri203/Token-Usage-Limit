@@ -70,8 +70,6 @@ const summary = (list: Limit[], now: number) =>
           return `${dot(l.percentUsed)} ${info(l.kind).name.padEnd(11)} ${colorBar(l.percentUsed)}  ${l.percentUsed}%${when}`
         })
         .join('\n')
-const statusText = (list: Limit[]) =>
-  list.length === 0 ? undefined : list.map(l => `${dot(l.percentUsed)} ${info(l.kind).short} ${colorBar(l.percentUsed, 5)} ${l.percentUsed}%`).join('  ')
 
 /** Ghi số liệu ra file cho skill đọc. Chỉ ghi khi đường dẫn hợp với hệ điều hành đang chạy. */
 const writeOut = async ($: EngineInterface, outFile: string, list: Limit[]) => {
@@ -91,7 +89,6 @@ export const register: Register = (on, options) => {
     const r = await next(e)
     const u = await $.session.usage()
     await update($, limits, () => u.rateLimits)
-    $.ui.status(statusText(u.rateLimits))
     void $.ui.open({ id: PANE, title: 'Hạn mức sử dụng', placement: 'widget' })
     $.command.register({ name: 'han-muc', description: 'Xem hạn mức sử dụng; đổi thanh: đầy đủ → gọn → ẩn (hoặc /han-muc day|gon|an)' })
     return r
@@ -100,7 +97,6 @@ export const register: Register = (on, options) => {
   on('session.measure', async ($, e, next) => {
     const before = await read($, limits)
     await update($, limits, () => e.rateLimits)
-    $.ui.status(statusText(e.rateLimits))
     await writeOut($, outFile, e.rateLimits)
     for (const l of e.rateLimits) {
       const old = before.find(b => b.kind === l.kind)?.percentUsed ?? 0
@@ -130,7 +126,6 @@ export const register: Register = (on, options) => {
     const m = await update($, mode, v => pick ?? (v === 'full' ? 'compact' : v === 'compact' ? 'hidden' : 'full'))
     const fresh = (await $.session.usage()).rateLimits
     await update($, limits, () => fresh)
-    $.ui.status(statusText(fresh))
     const opened = await $.ui.open({ id: PANE, title: 'Hạn mức sử dụng', placement: 'widget' })
     const label = m === 'full' ? 'đầy đủ' : m === 'compact' ? 'gọn' : 'ẩn'
     return { text: `${summary(fresh, await $.clock.now())}\n(Thanh trên ô nhập: ${label} · /han-muc day|gon|an · /han-muc cuoi: bật/tắt bảng cuối câu trả lời)${opened.isPlaced ? '' : `\n(Khung bên cạnh chưa hiện: ${opened.reason})`}` }
