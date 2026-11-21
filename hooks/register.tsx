@@ -4,7 +4,6 @@ import type { EngineInterface, Register, RenderInput } from 'claude-code'
 import type { Limit, Mode } from '../types'
 
 const limits = atom({ plugin: 'han-muc', key: 'limits' } as const, [] as Limit[])
-const isFooter = atom({ plugin: 'han-muc', key: 'isFooter' } as const, true)
 const mode = atom({ plugin: 'han-muc', key: 'mode' } as const, 'full' as Mode)
 
 const PANE = 'han-muc'
@@ -98,30 +97,15 @@ export const register: Register = (on, options) => {
     return next(e)
   })
 
-  // Sau mỗi câu trả lời: in bảng hạn mức bên dưới (mô hình không đọc dòng này, không tốn token)
-  on('turn.complete', async ($, e, next) => {
-    const r = await next(e)
-    if (e.agentId !== undefined || e.reason !== 'answer' || !(await read($, isFooter))) return r
-    const list = (await $.session.usage()).rateLimits
-    if (list.length === 0) return r
-    await update($, limits, () => list)
-    await writeOut($, outFile, list)
-    return { ...r, text: summary(list, await $.clock.now()) }
-  })
-
   on('command.run', { command: 'han-muc' }, async ($, e) => {
     const a = e.args.trim().toLowerCase()
-    if (a.startsWith('c')) {
-      const on2 = await update($, isFooter, v => !v)
-      return { text: on2 ? 'Đã bật bảng hạn mức cuối mỗi câu trả lời.' : 'Đã tắt bảng hạn mức cuối mỗi câu trả lời.' }
-    }
     const pick: Mode | undefined = a.startsWith('d') ? 'full' : a.startsWith('g') ? 'compact' : a.startsWith('a') ? 'hidden' : undefined
     const m = await update($, mode, v => pick ?? (v === 'full' ? 'compact' : v === 'compact' ? 'hidden' : 'full'))
     const fresh = (await $.session.usage()).rateLimits
     await update($, limits, () => fresh)
     const opened = await $.ui.open({ id: PANE, title: 'Hạn mức sử dụng', placement: 'widget' })
     const label = m === 'full' ? 'đầy đủ' : m === 'compact' ? 'gọn' : 'ẩn'
-    return { text: `${summary(fresh, await $.clock.now())}\n(Thanh trên ô nhập: ${label} · /han-muc day|gon|an · /han-muc cuoi: bật/tắt bảng cuối câu trả lời)${opened.isPlaced ? '' : `\n(Khung bên cạnh chưa hiện: ${opened.reason})`}` }
+    return { text: `${summary(fresh, await $.clock.now())}\n(Thanh trên ô nhập: ${label} · /han-muc day|gon|an)${opened.isPlaced ? '' : `\n(Khung bên cạnh chưa hiện: ${opened.reason})`}` }
   })
 
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => draw($, e, 'pane'))
