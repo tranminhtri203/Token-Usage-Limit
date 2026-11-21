@@ -164,13 +164,13 @@ async function draw($: EngineInterface, e: RenderInput<'Pane' | 'AbovePrompt'>, 
 
     if (m === 'compact') {
       return (
-        <Box flexDirection="row" gap={2} paddingX={1}>
+        <Box flexDirection="column" paddingX={1}>
           {list.map(l => (
             <Box key={l.kind} flexDirection="row" gap={1}>
-              <Text color={tone(l.percentUsed)}>{info(l.kind).short}</Text>
+              <Text>{info(l.kind).short}</Text>
               {bar(l.percentUsed)}
-              <Text color={tone(l.percentUsed)} weight="bold">{l.percentUsed}%</Text>
-              {l.resetsAt && <Text color={tone(l.percentUsed)}>{resetText(l.resetsAt, now)}</Text>}
+              <Text color={tone(l.percentUsed)} weight="bold">{`${l.percentUsed}%`.padStart(4)}</Text>
+              {l.resetsAt && <Text>{resetText(l.resetsAt, now)}</Text>}
             </Box>
           ))}
         </Box>
@@ -188,10 +188,10 @@ async function draw($: EngineInterface, e: RenderInput<'Pane' | 'AbovePrompt'>, 
           return (
             <Box key={l.kind} flexDirection="row" gap={1}>
               <Text>{dot(p)}</Text>
-              <Text color={tone(p)}>{info(l.kind).name.padEnd(11)}</Text>
+              <Text>{info(l.kind).name.padEnd(11)}</Text>
               {bar(p)}
               <Text color={tone(p)} weight="bold">{`${p}%`.padStart(4)}</Text>
-              <Text color={tone(p)}>
+              <Text>
                 {[reset && `còn ${reset}`, pace].filter(Boolean).join(' · ')}
               </Text>
             </Box>
