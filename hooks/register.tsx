@@ -18,7 +18,7 @@ const INFO: Record<string, Info> = {
 const info = (k: string): Info => INFO[k] ?? { name: k, short: k }
 
 // Màu cố định (hex) để luôn hiện màu, không phụ thuộc giao diện
-const C = { green: '#22c55e', lime: '#a3e635', amber: '#f59e0b', orange: '#f97316', red: '#ef4444', rest: '#4b5563', title: '#d97757', label: '#93c5fd' }
+const C = { green: '#22c55e', lime: '#a3e635', amber: '#f59e0b', orange: '#f97316', red: '#ef4444', rest: '#4b5563', title: '#d97757' }
 const tone = (p: number) => (p >= 90 ? C.red : p >= 70 ? C.amber : C.green)
 /** Màu ô theo vị trí trên thanh: xanh → vàng → đỏ */
 const heat = (pos: number) => (pos < 40 ? C.green : pos < 60 ? C.lime : pos < 75 ? C.amber : pos < 90 ? C.orange : C.red)
@@ -167,10 +167,10 @@ async function draw($: EngineInterface, e: RenderInput<'Pane' | 'AbovePrompt'>, 
         <Box flexDirection="row" gap={2} paddingX={1}>
           {list.map(l => (
             <Box key={l.kind} flexDirection="row" gap={1}>
-              <Text color={C.label}>{info(l.kind).short}</Text>
+              <Text color={tone(l.percentUsed)}>{info(l.kind).short}</Text>
               {bar(l.percentUsed)}
               <Text color={tone(l.percentUsed)} weight="bold">{l.percentUsed}%</Text>
-              {l.resetsAt && <Text color="subtle">{resetText(l.resetsAt, now)}</Text>}
+              {l.resetsAt && <Text color={tone(l.percentUsed)}>{resetText(l.resetsAt, now)}</Text>}
             </Box>
           ))}
         </Box>
@@ -188,10 +188,10 @@ async function draw($: EngineInterface, e: RenderInput<'Pane' | 'AbovePrompt'>, 
           return (
             <Box key={l.kind} flexDirection="row" gap={1}>
               <Text>{dot(p)}</Text>
-              <Text color={C.label}>{info(l.kind).name.padEnd(11)}</Text>
+              <Text color={tone(p)}>{info(l.kind).name.padEnd(11)}</Text>
               {bar(p)}
               <Text color={tone(p)} weight="bold">{`${p}%`.padStart(4)}</Text>
-              <Text color="subtle">
+              <Text color={tone(p)}>
                 {[reset && `còn ${reset}`, pace].filter(Boolean).join(' · ')}
               </Text>
             </Box>
