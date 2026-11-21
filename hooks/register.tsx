@@ -154,38 +154,22 @@ async function draw($: EngineInterface, e: RenderInput<'Pane' | 'AbovePrompt'>, 
       )
     }
 
-    if (m === 'compact') {
-      return (
-        <Box flexDirection="column" paddingX={1}>
-          {list.map(l => (
-            <Box key={l.kind} flexDirection="row" gap={2}>
-              <Text>{info(l.kind).short}</Text>
-              <Text>{dot(l.percentUsed)}</Text>
-              {bar(l.percentUsed)}
-              <Text color={tone(l.percentUsed)} weight="bold">{`${l.percentUsed}%`.padStart(4)}</Text>
-              {l.resetsAt && <Text>{resetText(l.resetsAt, now)}</Text>}
-            </Box>
-          ))}
-        </Box>
-      )
-    }
-
-    return (
-      <Box flexDirection="column" borderStyle="round" borderColor={C.title} paddingX={1}>
-        <Text color={C.title} weight="bold">✻ Hạn mức sử dụng</Text>
-        {list.map(l => {
-          const p = l.percentUsed
-          return (
-            <Box key={l.kind} flexDirection="row" gap={1}>
-              <Text>{dot(p)}</Text>
-              <Text>{info(l.kind).name.padEnd(11)}</Text>
-              {bar(p)}
-              <Text color={tone(p)} weight="bold">{`${p}%`.padStart(4)}</Text>
-              {l.resetsAt && <Text>{resetText(l.resetsAt, now)}</Text>}
-            </Box>
-          )
-        })}
+    // Cột tên và cột % có độ rộng cố định để các dòng thẳng hàng
+    const rows = list.map(l => (
+      <Box key={l.kind} flexDirection="row" gap={2}>
+        <Text>{dot(l.percentUsed)}</Text>
+        <Box width={11}><Text wrap="truncate-end">{info(l.kind).name}</Text></Box>
+        {bar(l.percentUsed)}
+        <Box width={4} justifyContent="flex-end"><Text color={tone(l.percentUsed)} weight="bold">{`${l.percentUsed}%`}</Text></Box>
+        {l.resetsAt && <Text wrap="truncate-end">{resetText(l.resetsAt, now)}</Text>}
       </Box>
+    ))
+    const title = <Text color={C.title} weight="bold">✻ Hạn mức sử dụng</Text>
+
+    return m === 'compact' ? (
+      <Box flexDirection="column" paddingX={1}>{title}{rows}</Box>
+    ) : (
+      <Box flexDirection="column" borderStyle="round" borderColor={C.title} paddingX={1}>{title}{rows}</Box>
     )
   }
 }
