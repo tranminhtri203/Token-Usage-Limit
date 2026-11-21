@@ -166,8 +166,9 @@ async function draw($: EngineInterface, e: RenderInput<'Pane' | 'AbovePrompt'>, 
       return (
         <Box flexDirection="column" paddingX={1}>
           {list.map(l => (
-            <Box key={l.kind} flexDirection="row" gap={1}>
+            <Box key={l.kind} flexDirection="row" gap={2}>
               <Text>{info(l.kind).short}</Text>
+              <Text>{dot(l.percentUsed)}</Text>
               {bar(l.percentUsed)}
               <Text color={tone(l.percentUsed)} weight="bold">{`${l.percentUsed}%`.padStart(4)}</Text>
               {l.resetsAt && <Text>{resetText(l.resetsAt, now)}</Text>}
