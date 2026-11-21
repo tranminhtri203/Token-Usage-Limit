@@ -37,6 +37,11 @@ const left = (iso: string | undefined, now: number) => {
   const m = Math.floor((ms % 3_600_000) / 60_000)
   return d > 0 ? `${d} ngày ${h} giờ` : h > 0 ? `${h} giờ ${m} phút` : `${m} phút`
 }
+/** "còn 3 giờ 15 phút" / "sắp làm mới" / "" khi không có giờ làm mới */
+const resetText = (iso: string | undefined, now: number) => {
+  const r = left(iso, now)
+  return r === '' || r === 'sắp làm mới' ? r : `còn ${r}`
+}
 
 /** Phần thời gian đã trôi của khung (0..1), để so nhịp dùng. */
 const elapsed = (l: Limit, now: number) => {
@@ -61,7 +66,7 @@ const summary = (list: Limit[], now: number) =>
     : list
         .map(l => {
           const r = left(l.resetsAt, now)
-          const when = r === '' ? '' : r === 'sắp làm mới' ? ' · sắp làm mới' : ` · còn ${r}`
+          const when = r === '' ? '' : ` · ${resetText(l.resetsAt, now)}`
           return `${dot(l.percentUsed)} ${info(l.kind).name.padEnd(11)} ${colorBar(l.percentUsed)}  ${l.percentUsed}%${when}`
         })
         .join('\n')
@@ -169,6 +174,7 @@ async function draw($: EngineInterface, e: RenderInput<'Pane' | 'AbovePrompt'>, 
               <Text color={C.label}>{info(l.kind).short}</Text>
               {bar(l.percentUsed)}
               <Text color={tone(l.percentUsed)} weight="bold">{l.percentUsed}%</Text>
+              {l.resetsAt && <Text color="subtle">{resetText(l.resetsAt, now)}</Text>}
             </Box>
           ))}
         </Box>
