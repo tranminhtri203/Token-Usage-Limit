@@ -9,10 +9,10 @@ const mode = atom({ plugin: 'han-muc', key: 'mode' } as const, 'full' as Mode)
 
 const PANE = 'han-muc'
 
-type Info = { name: string; short: string; spanMs?: number }
+type Info = { name: string; short: string }
 const INFO: Record<string, Info> = {
-  five_hour: { name: 'Phiên 5 giờ', short: '5g', spanMs: 5 * 3_600_000 },
-  seven_day: { name: 'Tuần 7 ngày', short: '7n', spanMs: 7 * 86_400_000 },
+  five_hour: { name: 'Phiên 5 giờ', short: '5g' },
+  seven_day: { name: 'Tuần 7 ngày', short: '7n' },
   spend_limit: { name: 'Chi tiêu', short: '$' },
 }
 const info = (k: string): Info => INFO[k] ?? { name: k, short: k }
@@ -41,14 +41,6 @@ const left = (iso: string | undefined, now: number) => {
 const resetText = (iso: string | undefined, now: number) => {
   const r = left(iso, now)
   return r === '' || r === 'sắp làm mới' ? r : `còn ${r}`
-}
-
-/** Phần thời gian đã trôi của khung (0..1), để so nhịp dùng. */
-const elapsed = (l: Limit, now: number) => {
-  const span = info(l.kind).spanMs
-  if (!span || !l.resetsAt) return undefined
-  const f = 1 - (Date.parse(l.resetsAt) - now) / span
-  return f >= 0 && f <= 1 ? f : undefined
 }
 
 /** Icon: còn nhiều (đã dùng dưới 70%) → 🔋, còn ít (từ 70%) → 🪫 */
@@ -183,18 +175,13 @@ async function draw($: EngineInterface, e: RenderInput<'Pane' | 'AbovePrompt'>, 
         <Text color={C.title} weight="bold">✻ Hạn mức sử dụng</Text>
         {list.map(l => {
           const p = l.percentUsed
-          const f = elapsed(l, now)
-          const pace = f === undefined ? '' : p / 100 > f + 0.1 ? 'nhanh hơn nhịp' : p / 100 < f - 0.1 ? 'trong nhịp' : 'đúng nhịp'
-          const reset = left(l.resetsAt, now)
           return (
             <Box key={l.kind} flexDirection="row" gap={1}>
               <Text>{dot(p)}</Text>
               <Text>{info(l.kind).name.padEnd(11)}</Text>
               {bar(p)}
               <Text color={tone(p)} weight="bold">{`${p}%`.padStart(4)}</Text>
-              <Text>
-                {[reset && `còn ${reset}`, pace].filter(Boolean).join(' · ')}
-              </Text>
+              {l.resetsAt && <Text>{resetText(l.resetsAt, now)}</Text>}
             </Box>
           )
         })}
